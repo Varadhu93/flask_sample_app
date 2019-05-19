@@ -5,7 +5,7 @@ Created on Thu May 16 23:35:28 2019
 @author: S.R.Varadharam-pc
 """
 
-from flask import Flask, render_template, request, redirect, url_for, jsonify, flash
+from flask import Flask, render_template, request, redirect, url_for, jsonify, flash, jsonify
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from database_setup import Base, Restaurant, MenuItem
@@ -18,12 +18,29 @@ DBSession = sessionmaker(bind=engine)
 session = DBSession()
 
 
+# CODE TO ADD JSON TO MENU
+@app.route('/restaurants/<int:restaurant_id>/menu/JSON')
+def restaurantMenuJSON(restaurant_id):
+    restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
+    items = session.query(MenuItem).filter_by(restaurant_id=restaurant.id).all()
+    return jsonify(MenuItems=[i.serialize for i in items])
+
+
+# CODE TO GET JSON TO A SPECIFIC MENU ITEM
+@app.route('/restaurants/<int:restaurant_id>/menu/<int:menu_id>/JSON')
+def menuItemJSON(restaurant_id, menu_id):
+    # restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
+    # menuItems = session.query(MenuItem).filter_by(restaurant_id=restaurant.id).all()
+    item = session.query(MenuItem).filter_by(id=menu_id).one()
+    return jsonify(MenuItem=item.serialize)
+
+
 # CODE TO RETURN RESTAURANTS BASED ON RESTAURANT ID
 @app.route('/')
-@app.route('/restaurants/<int:restaurant_id>/')
+@app.route('/restaurants/<int:restaurant_id>/menu')
 def restaurantMenu(restaurant_id):
     restaurant = session.query(Restaurant).filter_by(id=restaurant_id).one()
-    items = session.query(MenuItem).filter_by(restaurant_id=restaurant.id)
+    items = session.query(MenuItem).filter_by(restaurant_id=restaurant.id).all()
     return render_template('menu.html', restaurant=restaurant, items=items)
 #    output = ''
 #    for i in items:
